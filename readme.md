@@ -15,6 +15,10 @@ Before you begin, ensure you have the following:
     * `Note.csv` (for classic notes)
     * `Events.csv`
     * `Opportunity.csv`
+    * `EmailMessage.csv` (for Enhanced Emails)
+    * `Task.csv` (used as a decoder ring to resolve Enhanced Email associations)
+    * `wbsendit__Campaign_Monitor_Campaign__c.csv` (if using Campaign Monitor)
+    * `wbsendit__Campaign_Activity__c.csv` (if using Campaign Monitor)
     * Folders containing the actual exported files (e.g., `Attachments`, `ContentVersion`).
 3.  **HubSpot ID Mappers:** After importing your main records (Contacts, Companies, Deals) into HubSpot, you must create a set of mapping CSVs that link the old Salesforce IDs to the new HubSpot IDs.
 4.  **Dependencies:** In your terminal, navigate to the project folder and run the following command to install all necessary libraries:
@@ -38,6 +42,11 @@ Create the initial CSV files for notes and engagements. These will still contain
 * `create-classic-notes.js`
 * `create-activities.js`
 
+➡️ **Step 2b: Generate Email Activity Sheets (from SF Email sources)**
+Salesforce stores emails in multiple places. Run the relevant scripts for whichever sources you have. Because these outputs embed raw HTML email bodies, HubSpot's standard importer will frequently reject the resulting CSVs (it misidentifies them as HTML files rather than CSVs). Use the matching API import script instead of uploading through the HubSpot UI.
+* `create-enhanced-emails.js` — for emails stored in `EmailMessage` (Salesforce Enhanced Email)
+* `create-email-from-campaign-monitor.js` — for emails sent via Campaign Monitor and tracked in Salesforce
+
 ➡️ **Step 3: Map Salesforce IDs to HubSpot IDs**
 This is a manual step where you import your main records (Contacts, Companies, etc.) into HubSpot. Then, you create the `mapper` CSVs that link the old Salesforce IDs to the new HubSpot IDs.
 
@@ -46,6 +55,11 @@ Run `map-snotes.js` to replace the SF IDs in your note sheets with the correct H
 
 ➡️ **Step 5: Prepare File Upload Manifest**
 Run `create-import-manifest.js` to generate the JSON files that list which files belong to which HubSpot records.
+
+➡️ **Step 5b: Import Email Activities via API**
+Run the API import scripts to push the email CSVs created in Step 2b directly into HubSpot. **You must add your HubSpot Private App Token to each script's `CONFIG.hubspotToken` field before running** (see script details below). Both scripts rate-limit themselves to ~10 requests per second to stay within HubSpot's API limits.
+* `import-enhanced-emails.js` — imports Enhanced Email CSVs for contacts, companies, and deals
+* `import-campagin-montior-emails.js` — imports Campaign Monitor email CSVs (contacts only)
 
 ➡️ **Step 6: Upload Files to HubSpot**
 Run `import-files.js` to read the manifest and upload/attach all files via the API.
@@ -86,7 +100,46 @@ These scripts read your Salesforce data and create the initial CSV files for imp
 * **Configuration:** The `TYPE_MAP` object at the top is crucial. Here, you map your custom Salesforce event types (e.g., "Qual Call", "Demo") to a standard HubSpot type (`calls`, `meetings`, `emails`).
 * **Usage:** `node create-activities.js`
 
-### 3. Post-Processing Scripts
+### 3. Email Activity Generators
+
+Salesforce stores email history in several places beyond `Events.csv`. These scripts extract emails from those sources and produce HubSpot-compatible import CSVs. Because the output files contain raw HTML email bodies, HubSpot's standard CSV importer will often reject them as "not a valid CSV." Use the matching API import scripts (section 4 below) instead of uploading through the HubSpot UI.
+
+#### `create-enhanced-emails.js`
+* **Purpose:** Processes `EmailMessage.csv` (Salesforce Enhanced Email) to produce separate import CSVs for Contacts, Companies, and Deals. Uses `Task.csv` as a decoder ring to resolve which HubSpot records each email should be linked to, and injects From/To/CC metadata as a styled HTML header in the email body.
+* **Configuration:** Set `mappersDir`, `emailMessageCsv`, `tasksCsv`, and `outputDir` inside the `CONFIG` block at the top of the script.
+* **Usage:** `node create-enhanced-emails.js`
+* **Output:** `hubspot_import_enhanced_emails_for_contacts.csv`, `..._companies.csv`, `..._deals.csv`
+
+#### `create-email-from-campaign-monitor.js`
+* **Purpose:** Processes Campaign Monitor campaign data (`wbsendit__Campaign_Monitor_Campaign__c.csv` and `wbsendit__Campaign_Activity__c.csv`) to produce email activity CSVs. Only "Sent" interactions are exported — opens, clicks, and bounces are ignored. If an HTML body is not stored in Salesforce, the script fetches it live from Campaign Monitor's web version URL. Output is automatically chunked into files of 2,000 rows each to avoid import size limits.
+* **Configuration:** Set `mappersDir`, the two `salesforce` CSV paths, `outputDir`, and optionally `chunkSize` in the `CONFIG` block.
+* **Usage:** `node create-email-from-campaign-monitor.js`
+* **Output:** `HubSpot_Import_Campaign_Monitor_Emails_Part_1.csv`, `..._Part_2.csv`, etc.
+
+### 4. Email Activity API Import Scripts
+
+These scripts push the email CSVs directly into HubSpot via the Engagements API, bypassing the CSV importer entirely. **Before running either script, open it and paste your HubSpot Private App Token into the `hubspotToken` field inside the `CONFIG` block.** Do not commit this token to source control.
+
+To get a Private App Token:
+1. In HubSpot, go to **Settings → Integrations → Private Apps**.
+2. Create a new app (or use an existing one) and grant it `crm.objects.contacts.write`, `crm.objects.companies.write`, and `crm.objects.deals.write` scopes, plus `engagements` write access.
+3. Copy the token and paste it into `CONFIG.hubspotToken` in the script.
+
+#### `import-enhanced-emails.js`
+* **Purpose:** Reads the CSVs produced by `create-enhanced-emails.js` (files containing `enhanced_emails` in the name) from the configured `generatedFilesDir` and posts each row to HubSpot's v1 Engagements API. Automatically detects from the filename whether each file targets contacts, companies, or deals and routes the association accordingly.
+* **Configuration:** Set `generatedFilesDir`, `failedOutputPath`, and `hubspotToken` in the `CONFIG` block.
+* **Special Setup:** Paste your HubSpot Private App Token into `CONFIG.hubspotToken`.
+* **Usage:** `node import-enhanced-emails.js`
+* **Output:** Any rows that fail to upload are saved to `failed_enhanced_api_emails.csv` for review.
+
+#### `import-campagin-montior-emails.js`
+* **Purpose:** Reads the chunked CSVs produced by `create-email-from-campaign-monitor.js` (files containing `Campaign_Monitor` in the name) from `generatedFilesDir` and posts each row to HubSpot's v1 Engagements API. Also loads the original campaigns CSV to look up sender name and email address to attach to each engagement.
+* **Configuration:** Set `generatedFilesDir`, `campaignsCsv`, `failedOutputPath`, and `hubspotToken` in the `CONFIG` block.
+* **Special Setup:** Paste your HubSpot Private App Token into `CONFIG.hubspotToken`.
+* **Usage:** `node import-campagin-montior-emails.js`
+* **Output:** Any rows that fail to upload are saved to `failed_api_emails.csv` for review.
+
+### 6. Post-Processing Scripts
 
 These scripts refine the generated import sheets and prepare for the final API step.
 
@@ -102,7 +155,7 @@ These scripts refine the generated import sheets and prepare for the final API s
 * **Usage:** `node create-import-manifest.js`
 * **Output:** Creates `contacts_manifest.json`, `companies_manifest.json`, etc.
 
-### 4. HubSpot API Upload Script
+### 7. HubSpot API File Upload Script
 
 #### `import-files.js`
 * **Purpose:** Reads the JSON manifest files and performs the final import. For each entry, it finds the file on your disk, uploads it to the HubSpot File Manager, and then attaches it as a Note engagement to the specified HubSpot record.
