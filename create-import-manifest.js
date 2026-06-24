@@ -7,19 +7,19 @@ const csv = require('csv-parser');
 // ==================================================================
 const CONFIG = {
     mappers: {
-        companies: './maps/company-mapper.csv',
-        contacts: './maps/contact-mapper.csv',
-        deals: './maps/deal-mapper.csv' // Your updated deals mapper
+        companies: './hubspot-exports/all-salesforce-companies-2026-04-22.csv',
+        contacts: './hubspot-exports/all-salesforce-contacts-2026-04-22.csv',
+        deals: './hubspot-exports/all-salesforce-deals-2026-04-22.csv' // Your updated deals mapper
     },
     salesforce: {
-        attachments: '../CSV/Attachment.csv',
-        contentVersion: '../CSV/ContentVersion.csv',
-        contentDocLink: '../CSV/ContentDocumentLink.csv'
+        // attachments: '../CSV/Attachment.csv',
+        contentVersion: './salesforce-exports/WE_00D5e000003SzlkEAC_1 (zip1)/ContentVersion.csv',
+        contentDocLink: './salesforce-exports/WE_00D5e000003SzlkEAC_1 (zip1)/ContentDocumentLink.csv'
         // NOTE: Opportunity.csv is no longer needed
     },
     files: {
-        attachments: '../Attachments',
-        contentVersion: '../ContentVersion'
+        // attachments: '../Attachments',
+        contentVersion: './salesforce-exports/Master-ContentVersion'
     },
     outputDir: './'
 };
@@ -115,8 +115,8 @@ async function main() {
     const fileManifest = { companies: [], contacts: [], deals: [] };
     
     // Process Attachments
-    const attachments = await readCsv(CONFIG.salesforce.attachments);
-    await processFiles('Attachments', attachments, sfToHsIdMap, fileManifest);
+    // const attachments = await readCsv(CONFIG.salesforce.attachments);
+    // await processFiles('Attachments', attachments, sfToHsIdMap, fileManifest);
 
     // Process ContentVersions
     const [links, versions] = await Promise.all([

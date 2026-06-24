@@ -5,8 +5,8 @@ const csv = require('csv-parser');
 // ==================================================================
 // ✅ CONFIGURATION
 // ==================================================================
-const CONTENT_VERSION_CSV = '../CSV/ContentVersion.csv';
-const FILES_DIRECTORY_PATH = '../ContentVersion'; // The folder where the ContentVersion files are
+const CONTENT_VERSION_CSV = './salesforce-exports/WE_00D5e000003SzlkEAC_1 (zip1)/ContentVersion.csv';
+const FILES_DIRECTORY_PATH = './salesforce-exports/Master-ContentVersion'; // The folder where the ContentVersion files are
 
 // ✅ NEW: A safe character limit for the main body of the filename.
 const MAX_FILENAME_BODY_LENGTH = 200;
@@ -63,6 +63,7 @@ async function processAndRenameFiles() {
     const cleanFileId = originalFilename.trim();
     
     if (!fileMetadata.has(cleanFileId)) {
+      // console.log(`⏭️  No metadata match for: "${cleanFileId}"`);
       skippedCount++;
       continue;
     }

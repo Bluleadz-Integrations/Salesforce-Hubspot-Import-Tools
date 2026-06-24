@@ -7,9 +7,9 @@ const csv = require('csv-parser');
 // ==================================================================
 const CONFIG = {
     // Paths to your ID mapping files
-    mappersDir: './maps/',
+    mappersDir: './hubspot-exports/',
     // Path to your main Salesforce Events.csv export
-    eventsCsv: '../CSV/Event.csv',
+    eventsCsv: './salesforce-exports/WE_00D5e000003SzlkEAC_1 (zip1)/Event.csv',
     // Where to save the final HubSpot import files
     outputDir: './'
 };
@@ -27,7 +27,9 @@ const TYPE_MAP = {
     ],
     meetings: [
         'Meeting',
-        'Demo'      // Your example
+        'Face to Face',
+        'Presentation',
+        'Appointment Set',
     ],
     emails: [
         'Email'
@@ -65,10 +67,10 @@ async function loadMappers() {
         '006': new Map(), '500': new Map()
     };
     const mappersToLoad = [
-        { name: 'company-mapper.csv', prefix: '001', sfIdColumns: ['SF ID'] },
-        { name: 'contact-mapper.csv', prefix: '003', sfIdColumns: ['SF ID', 'SF Contact ID'] },
-        { name: 'contact-mapper.csv', prefix: '00Q', sfIdColumns: ['SF Lead ID'] },
-        { name: 'deal-mapper.csv', prefix: '006', sfIdColumns: ['sf_id', 'SF ID'] },
+        { name: 'all-salesforce-companies-2026-04-22.csv', prefix: '001', sfIdColumns: ['SF ID'] },
+        { name: 'all-salesforce-contacts-2026-04-22.csv', prefix: '003', sfIdColumns: ['SF ID', 'SF Contact ID'] },
+        // { name: 'contact-mapper.csv', prefix: '00Q', sfIdColumns: ['SF Lead ID'] },
+        { name: 'all-salesforce-deals-2026-04-22.csv', prefix: '006', sfIdColumns: ['sf_id', 'SF ID'] },
     ];
     for (const mapper of mappersToLoad) {
         try {
@@ -177,8 +179,7 @@ async function main() {
 
         // Add the row to each associated object type's list
         for (const assoc of associations) {
-            rowData['Record ID'] = assoc.hsId;
-            outputData[hsEngagementType][assoc.type].push(rowData);
+            outputData[hsEngagementType][assoc.type].push({ ...rowData, 'Record ID': assoc.hsId });
         }
     }
     

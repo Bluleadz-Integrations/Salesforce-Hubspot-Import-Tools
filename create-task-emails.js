@@ -6,9 +6,9 @@ const csv = require('csv-parser');
 // ✅ CONFIGURATION
 // ==================================================================
 const CONFIG = {
-    mappersDir: './maps/',
-    taskCsv: '../CSV/Task.csv',
-    emailMessageCsv: '../CSV/EmailMessage.csv',
+    mappersDir: './hubspot-exports/',
+    taskCsv: './salesforce-exports/WE_00D5e000003SzlkEAC_1 (zip1)/Task.csv',
+    emailMessageCsv: './salesforce-exports/WE_00D5e000003SzlkEAC_1 (zip1)/EmailMessage.csv',
     outputDir: './',
 
     // ✅ NEW: Set to true to skip rows where no email body could be found
@@ -63,10 +63,10 @@ async function loadMappers() {
         '006': new Map(), '500': new Map()
     };
     const mappersToLoad = [
-        { name: 'company-mapper.csv', prefix: '001', sfIdColumns: ['SF ID'] },
-        { name: 'contact-mapper.csv', prefix: '003', sfIdColumns: ['SF ID', 'SF Contact ID'] },
-        { name: 'contact-mapper.csv', prefix: '00Q', sfIdColumns: ['SF Lead ID'] },
-        { name: 'deal-mapper.csv', prefix: '006', sfIdColumns: ['sf_id', 'SF ID'] },
+        { name: 'all-salesforce-companies-2026-04-22.csv', prefix: '001', sfIdColumns: ['SF ID'] },
+        { name: 'all-salesforce-contacts-2026-04-22.csv', prefix: '003', sfIdColumns: ['SF ID', 'SF Contact ID'] },
+        // { name: 'contact-mapper.csv', prefix: '00Q', sfIdColumns: ['SF Lead ID'] },
+        { name: 'all-salesforce-deals-2026-04-22.csv', prefix: '006', sfIdColumns: ['sf_id', 'SF ID'] },
     ];
     for (const mapper of mappersToLoad) {
         try {

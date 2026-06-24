@@ -10,7 +10,7 @@ const FormData = require('form-data');
 const CONFIG = {
     // Set to false to perform the actual import. 
     // START WITH true to ensure everything is found correctly.
-    DRY_RUN: true,
+    DRY_RUN: false,
     
     // Path to the folder containing your JSON manifest files
     manifestsDir: './',
@@ -55,9 +55,9 @@ async function uploadFileToHubSpot(fullFilePath) {
     const fileName = path.basename(fullFilePath);
     const form = new FormData();
     form.append('file', fs.createReadStream(fullFilePath));
+    form.append('folderPath', '/salesforce_import');
     const options = {
         access: 'PRIVATE',
-        folderPath: '/salesforce_import', // All files will go into this folder in HS
         overwrite: false
     };
     form.append('options', JSON.stringify(options));
