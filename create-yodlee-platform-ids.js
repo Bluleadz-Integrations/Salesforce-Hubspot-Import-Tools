@@ -31,6 +31,8 @@ const FIELD_MAP = {
     'Environment_Type__c':   'environment_type',
     'Subbra__c':             'subbra',
     'CreatedDate':           'salesforce_created_date',
+    'Id':                    'yodlee_platform_id',
+    'Account__c':            'account'
 };
 // ==================================================================
 

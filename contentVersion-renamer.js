@@ -5,7 +5,7 @@ const csv = require('csv-parser');
 // ==================================================================
 // ✅ CONFIGURATION
 // ==================================================================
-const CONTENT_VERSION_CSV = './salesforce-exports/WE_00D5e000003SzlkEAC_1 (zip1)/ContentVersion.csv';
+const CONTENT_VERSION_CSV = './salesforce-exports/ContentVersion.csv';
 const FILES_DIRECTORY_PATH = './salesforce-exports/Master-ContentVersion'; // The folder where the ContentVersion files are
 
 // ✅ NEW: A safe character limit for the main body of the filename.

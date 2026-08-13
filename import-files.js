@@ -123,6 +123,8 @@ async function main() {
         { type: 'deals', hsKey: 'dealIds' },
     ];
 
+    let uploadedCount = 0;
+
     for (const { type, hsKey } of objectTypes) {
         const manifestPath = path.join(CONFIG.manifestsDir, `${type}_manifest.json`);
         let manifestData;
@@ -148,6 +150,7 @@ async function main() {
             if (CONFIG.DRY_RUN) {
                 console.log(`   - [DRY RUN] Would upload this file.`);
                 console.log(`   - [DRY RUN] Would attach to ${type} ID ${fileEntry.hubspot_id}.`);
+                uploadedCount++;
             } else {
                 console.log(`[2/3] Uploading file...`);
                 const hubspotFileId = await uploadFileToHubSpot(fullFilePath);
@@ -155,6 +158,7 @@ async function main() {
                 if (hubspotFileId) {
                     console.log(`[3/3] Attaching file...`);
                     await attachFileToRecord(hsKey, fileEntry.hubspot_id, hubspotFileId, fileEntry);
+                    uploadedCount++;
                 }
             }
             
@@ -165,6 +169,7 @@ async function main() {
     
     console.log('\n----------------------------------------');
     console.log('✨ Import script finished!');
+    console.log(`   Uploaded: ${uploadedCount} file(s)`);
     console.log('----------------------------------------');
 }
 

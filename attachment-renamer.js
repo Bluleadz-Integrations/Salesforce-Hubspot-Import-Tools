@@ -6,8 +6,8 @@ const mime = require('mime-types');
 // ==================================================================
 // ✅ CONFIGURATION
 // ==================================================================
-const CSV_FILE_PATH = '../CSV/Attachment.csv';
-const FILES_DIRECTORY_PATH = '../Attachments';
+const CSV_FILE_PATH = './salesforce-exports/Attachment.csv';
+const FILES_DIRECTORY_PATH = './salesforce-exports/Attachments';
 // ==================================================================
 
 
